@@ -5,7 +5,8 @@ from std_msgs.msg import Bool
 from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
 from geometry_msgs.msg import TwistStamped
 import math
-
+from styx_msgs.msg import Lane, Waypoint
+from geometry_msgs.msg import PoseStamped, Pose
 from twist_controller import Controller
 
 '''
@@ -53,25 +54,50 @@ class DBWNode(object):
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
 
-        # TODO: Create `TwistController` object
-        # self.controller = TwistController(<Arguments you wish to provide>)
+        params = {
+            'vehicle_mass'      : vehicle_mass,
+            'fuel_capacity'     : fuel_capacity,
+            'brake_deadband'    : brake_deadband,
+            'decel_limit'       : decel_limit,
+            'accel_limit'       : accel_limit,
+            'wheel_radius'      : wheel_radius,
+            'wheel_base'        : wheel_base,
+            'steer_ratio'       : steer_ratio,
+            'max_lat_accel'     : max_lat_accel,
+            'max_steer_angle'   : max_steer_angle
+        }
+        self.controller = Controller(**params)
 
-        # TODO: Subscribe to all the topics you need to
+        self.dbw_enabled = False
+        self.current_setpoint = None
+        self.current_velocity = None
+        self.final_waypoints = None
+        self.current_pose = None
 
+        rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb, queue_size=1)
+        rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cmd_cb, queue_size=1)
+        rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_cb, queue_size=1)
+        rospy.Subscriber('/final_waypoints', Lane, self.final_waypoints_cb)
+        rospy.Subscriber('/current_pose', PoseStamped, self.current_pose_cb)
         self.loop()
 
     def loop(self):
-        rate = rospy.Rate(50) # 50Hz
+        rate = rospy.Rate(10) # 50Hz
         while not rospy.is_shutdown():
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
             # You should only publish the control commands if dbw is enabled
-            # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
-            #                                                     <proposed angular velocity>,
-            #                                                     <current linear velocity>,
-            #                                                     <dbw status>,
-            #                                                     <any other argument you need>)
-            # if <dbw is enabled>:
-            #   self.publish(throttle, brake, steer)
+            if (self.final_waypoints is not None) and (self.current_pose is not None) \
+            and (self.current_velocity is not None) and (self.current_setpoint is not None):
+                fwp_size = len(self.final_waypoints.waypoints) 
+                final_waypoint1 = self.final_waypoints.waypoints[0] if fwp_size>0 else None
+                final_waypoint2 = self.final_waypoints.waypoints[1] if fwp_size>1 else None
+                current_location    = self.current_pose.pose.position
+                linear_setpoint     = self.current_setpoint.twist.linear.x
+                angular_setpoint    = self.current_setpoint.twist.angular.z
+                linear_current      = self.current_velocity.twist.linear.x
+                angular_current     = self.current_velocity.twist.angular.z
+                throttle, brake, steering = self.controller.control(linear_setpoint, angular_setpoint, linear_current, angular_current, self.dbw_enabled, final_waypoint1, final_waypoint2, current_location)
+                if self.dbw_enabled:
+                    self.publish(throttle, brake, steering)
             rate.sleep()
 
     def publish(self, throttle, brake, steer):
@@ -81,6 +107,7 @@ class DBWNode(object):
         tcmd.pedal_cmd = throttle
         self.throttle_pub.publish(tcmd)
 
+        
         scmd = SteeringCmd()
         scmd.enable = True
         scmd.steering_wheel_angle_cmd = steer
@@ -91,7 +118,26 @@ class DBWNode(object):
         bcmd.pedal_cmd_type = BrakeCmd.CMD_TORQUE
         bcmd.pedal_cmd = brake
         self.brake_pub.publish(bcmd)
+        pass
 
+    def dbw_enabled_cb(self, msg):
+        self.dbw_enabled = msg.data
+        pass        
 
+    def twist_cmd_cb(self, msg):
+        self.current_setpoint = msg
+        pass
+
+    def current_velocity_cb(self, msg):
+        self.current_velocity = msg
+        pass
+
+    def final_waypoints_cb(self, msg):
+        self.final_waypoints = msg
+        pass
+
+    def current_pose_cb(self, msg):
+        self.current_pose = msg
+        pass
 if __name__ == '__main__':
     DBWNode()
