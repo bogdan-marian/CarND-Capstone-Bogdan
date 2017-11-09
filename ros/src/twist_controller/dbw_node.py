@@ -87,7 +87,7 @@ class DBWNode(object):
             # You should only publish the control commands if dbw is enabled
             if (self.final_waypoints is not None) and (self.current_pose is not None) \
             and (self.current_velocity is not None) and (self.current_setpoint is not None):
-                fwp_size = len(self.final_waypoints.waypoints) 
+                fwp_size = len(self.final_waypoints.waypoints)
                 final_waypoint1 = self.final_waypoints.waypoints[0] if fwp_size>0 else None
                 final_waypoint2 = self.final_waypoints.waypoints[1] if fwp_size>1 else None
                 current_location    = self.current_pose.pose.position
@@ -107,7 +107,7 @@ class DBWNode(object):
         tcmd.pedal_cmd = throttle
         self.throttle_pub.publish(tcmd)
 
-        
+
         scmd = SteeringCmd()
         scmd.enable = True
         scmd.steering_wheel_angle_cmd = steer
@@ -122,7 +122,7 @@ class DBWNode(object):
 
     def dbw_enabled_cb(self, msg):
         self.dbw_enabled = msg.data
-        pass        
+        pass
 
     def twist_cmd_cb(self, msg):
         self.current_setpoint = msg

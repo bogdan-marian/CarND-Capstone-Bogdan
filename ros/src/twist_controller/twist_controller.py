@@ -35,7 +35,7 @@ class Controller(object):
         pass
 
     def update_sample_step(self):
-        current_time = rospy.get_time() 
+        current_time = rospy.get_time()
         sample_step = current_time - self.previous_time if self.previous_time else 0.05
         self.previous_time = current_time
         return sample_step
@@ -62,8 +62,8 @@ class Controller(object):
             #[alexm]NOTE: let engine decelerate the car if required deceleration below brake_deadband
             brake = self.brake_tourque_const * decel if decel > self.brake_deadband else 0.
             throttle = 0.
-        
-        #NOTE this lowpass leads to sending both throttle and brake nonzero. Maybe it is better to filter velocity_correction
+
+        #::NOTE this lowpass leads to sending both throttle and brake nonzero. Maybe it is better to filter velocity_correction
         #brake = self.low_pass_filter_brake.filt(brake)
         #steering = self.yaw_controller.get_steering_pid(angular_velocity_setpoint, angular_current, dbw_enabled)
         #steering = 0.
