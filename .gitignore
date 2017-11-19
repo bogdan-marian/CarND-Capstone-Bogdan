@@ -1,4 +1,9 @@
+ros/images/
+ros/traffic_light_bag_files
+
 *.py[cod]
+
+
 
 build
 devel
