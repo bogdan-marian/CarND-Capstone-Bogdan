@@ -64,7 +64,6 @@ class TLDetector(object):
 
         self.next_wp = None
 
-        self.light_classifier.init()
         self.initialized = True
 
         rospy.spin()
@@ -279,7 +278,8 @@ class TLDetector(object):
                         light_wp = stop_line_wp_index
                         light = self.lights[i]
                         min_distance = distance
-        print('n_wp:{}; l_wp:{}'.format(self.next_wp, light_wp))
+        #print next light_wp
+        #print('n_wp:{}; l_wp:{}'.format(self.next_wp, light_wp))
         if light_wp > -1:
             state = self.get_light_state(light)
             if self.current_velocity and state == TrafficLight.YELLOW \
