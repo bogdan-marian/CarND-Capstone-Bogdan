@@ -87,6 +87,7 @@ class DBWNode(object):
             # You should only publish the control commands if dbw is enabled
             if (self.final_waypoints is not None) and (self.current_pose is not None) \
             and (self.current_velocity is not None) and (self.current_setpoint is not None):
+
                 fwp_size = len(self.final_waypoints.waypoints)
                 final_waypoint1 = self.final_waypoints.waypoints[0] if fwp_size>0 else None
                 final_waypoint2 = self.final_waypoints.waypoints[1] if fwp_size>1 else None
@@ -97,6 +98,7 @@ class DBWNode(object):
                 angular_current     = self.current_velocity.twist.angular.z
                 throttle, brake, steering = self.controller.control(linear_setpoint, angular_setpoint, linear_current, angular_current, self.dbw_enabled, final_waypoint1, final_waypoint2, current_location)
                 if self.dbw_enabled:
+                    rospy.loginfo("Drive by whire is publishin %s", "go-go-go")
                     self.publish(throttle, brake, steering)
             rate.sleep()
 

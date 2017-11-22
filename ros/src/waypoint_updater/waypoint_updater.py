@@ -48,6 +48,7 @@ class WaypointUpdater(object):
     def loop(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
+            rospy.loginfo("waypoint_updater loop started %s", "go-go-go")
             if (self.waypoints and self.next_waypoint_index):
                 lane = Lane()
                 lane.header.frame_id = self.current_pose.header.frame_id
@@ -208,6 +209,7 @@ class WaypointUpdater(object):
         return res
 
     def traffic_cb(self, traffic_waypoint):
+
         if (self.next_waypoint_index is None):
             return
         if (self.waypoints is None):

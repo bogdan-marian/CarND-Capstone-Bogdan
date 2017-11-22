@@ -14,6 +14,7 @@ from io import StringIO
 from matplotlib import pyplot as plt
 from PIL import Image
 from threading import Lock
+from datetime import datetime
 
 
 class TLClassifier(object):
@@ -22,11 +23,10 @@ class TLClassifier(object):
         # it takes time tu run the clasifyer so it is best to just return the
         # last known classification. Homework for later: bilt a faster model
         self.lock = Lock()
-        self.lastLight = TrafficLight.UNKNOWN
 
         #initializing tensorflow
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        PATH_TO_MODEL = dir_path + '/frozen_inference_graph.pb'
+        PATH_TO_MODEL = dir_path + '/06train-faster_rcnn_inception_v2_coco_2017_11_08.pb'
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -41,53 +41,33 @@ class TLClassifier(object):
             self.num_d = self.detection_graph.get_tensor_by_name('num_detections:0')
         self.sess = tf.Session(graph=self.detection_graph)
 
-    def clasify_in_background(self, image):
-
-        if not self.lock.acquire(False):
-            print("Failed to lock resource")
-        else:
-            try:
-                print("Working on something")
-                with self.detection_graph.as_default():
-                    print ("time to classify a inamge ")
-                    #Expand dimension since the model expects image to have shape [1, None, None, 3].
-                    img_expanded = np.expand_dims(image, axis=0)
-                    ( scores, classes ) = self.sess.run(
-                        [ self.d_scores, self.d_classes],
-                        feed_dict={self.image_tensor: img_expanded})
-                    print("classes: ", classes)
-                    print("scores: ", scores)
-            finally:
-                self.lock.release()
-
-
-
     def get_classification(self, image):
-        """Determines the color of the traffic light in the image
+        print("Start clasification")
+        with self.detection_graph.as_default():
+            print ("time to classify a inamge ")
+            #Expand dimension since the model expects image to have shape [1, None, None, 3].
+            img_expanded = np.expand_dims(image, axis=0)
+            ( scores, classes ) = self.sess.run(
+                [ self.d_scores, self.d_classes],
+                feed_dict={self.image_tensor: img_expanded})
 
-        Args:
-            image (cv::Mat): image containing the traffic light
+            print("classes: ", classes)
+            print("scores: ", scores)
 
-        Returns:
-            int: ID of traffic light color (specified in styx_msgs/TrafficLight)
-
-        """
-
-
-        thread = threading.Thread(target=self.clasify_in_background, args=(image,))
-        thread.daemon = True
-        thread.start()
-
-        return self.lastLight
+        return TrafficLight.UNKNOWN
+    # def get_classification(self, image):
+    #     thread = threading.Thread(target=self.clasify_in_background, args=(image,))
+    #     thread.daemon = True
+    #     thread.start()
 
 
-        # if self.working:
-        #     return self.lastLight
-        # else:
-        #     thread = threading.Thread(target=self.clasify_in_background, args=(image,))
-        #     #thread.daemon = True
-        #     thread.start()
-        #     return TrafficLight.UNKNOWN
-
-        #self.clasify_in_background(image)
-        #return TrafficLight.UNKNOWN
+# clasifier = TLClassifier()
+# image = Image.open('image3.png')
+#
+# start_time = str(datetime.now())
+# for i in range (4):
+#     print ("Item: ", i)
+#     clasifier.clasify_in_background(image)
+# end_time = str(datetime.now())
+# print ("Start time: ", start_time)
+# print ("End time  : ", end_time)

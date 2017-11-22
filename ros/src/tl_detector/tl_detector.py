@@ -234,8 +234,10 @@ class TLDetector(object):
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
         #Get classification
+        #rospy.loginfo("tl_detector classify new image %s", "placeholder")
         state = self.light_classifier.get_classification(cv_image)
         if state == TrafficLight.UNKNOWN and self.last_state:
+
             state = self.last_state
 
         #if state == TrafficLight.YELLOW:
