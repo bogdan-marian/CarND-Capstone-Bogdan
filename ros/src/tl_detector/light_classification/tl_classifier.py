@@ -41,18 +41,32 @@ class TLClassifier(object):
             self.num_d = self.detection_graph.get_tensor_by_name('num_detections:0')
         self.sess = tf.Session(graph=self.detection_graph)
 
+        #color codes have to match bosh_label_map used.pbtxt in training
+        self.red_values = [2.0, 5.0, 6.0, 9.0, 13.0, 14.0]
+        self.green_values = [1.0, 3.0, 4.0, 10.0, 11.0, 12.0]
+        self.yellow_values = [7]
+
     def get_classification(self, image):
-        print("Start clasification")
+
         with self.detection_graph.as_default():
-            print ("time to classify a inamge ")
+            start_time = datetime.now().microsecond
+
             #Expand dimension since the model expects image to have shape [1, None, None, 3].
             img_expanded = np.expand_dims(image, axis=0)
             ( scores, classes ) = self.sess.run(
                 [ self.d_scores, self.d_classes],
                 feed_dict={self.image_tensor: img_expanded})
 
-            print("classes: ", classes)
-            print("scores: ", scores)
+            end_time = datetime.now().microsecond
+
+            color_val =  classes[0][0]
+            score = scores[0][0]
+            if color_val in self.red_values:
+                print ("----> red   ", "Score = " , score, "<---", start_time, end_time)
+            elif color_val in self.green_values:
+                print ("----> green ", "Score = " , score, "<---", start_time, end_time)
+            elif color_val in self.yellow_values:
+                print ("----> yellow", "Score = " , score, "<---", start_time, end_time)
 
         return TrafficLight.UNKNOWN
     # def get_classification(self, image):
