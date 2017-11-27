@@ -26,7 +26,7 @@ class TLClassifier(object):
 
         #initializing tensorflow
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        PATH_TO_MODEL = dir_path + '/06train-faster_rcnn_inception_v2_coco_2017_11_08.pb'
+        PATH_TO_MODEL = dir_path + '/rfcn_resnet101_coco_2017_11_08.pb'
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -51,6 +51,15 @@ class TLClassifier(object):
         with self.detection_graph.as_default():
             start_time = datetime.now().microsecond
 
+            # # atempt to reduce computation for the clasifier
+            # # it is abit faster this way but not suficient.
+            # image = Image.fromarray(image,'RGB')
+            # size = image.size
+            # size = [0.5*x for x in size]
+            # image.thumbnail(size,Image.ANTIALIAS)
+            # image = image.getdata()
+            # print('detecting ---', start_time)
+
             #Expand dimension since the model expects image to have shape [1, None, None, 3].
             img_expanded = np.expand_dims(image, axis=0)
             ( scores, classes ) = self.sess.run(
@@ -58,17 +67,24 @@ class TLClassifier(object):
                 feed_dict={self.image_tensor: img_expanded})
 
             end_time = datetime.now().microsecond
-
-            color_val =  classes[0][0]
-            score = scores[0][0]
+            classes = np.squeeze(classes)
+            scores = np.squeeze(scores)
+            #print(classes)
+            #print (scores)
+            color_val =  classes[0]
+            score = scores[0]
             if color_val in self.red_values:
-                print ("----> red   ", "Score = " , score, "<---", start_time, end_time)
+                #print ("----> red   ", "Score = " , score, "<---", start_time, end_time)
+                return TrafficLight.RED
             elif color_val in self.green_values:
-                print ("----> green ", "Score = " , score, "<---", start_time, end_time)
+                #print ("----> green ", "Score = " , score, "<---", start_time, end_time)
+                return TrafficLight.GREEN
             elif color_val in self.yellow_values:
-                print ("----> yellow", "Score = " , score, "<---", start_time, end_time)
-
-        return TrafficLight.UNKNOWN
+                #print ("----> yellow", "Score = " , score, "<---", start_time, end_time)
+                return TrafficLight.YELLOW
+            else:
+                return TrafficLight.UNKNOWN
+            
     # def get_classification(self, image):
     #     thread = threading.Thread(target=self.clasify_in_background, args=(image,))
     #     thread.daemon = True
