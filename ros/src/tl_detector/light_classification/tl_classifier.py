@@ -22,11 +22,13 @@ class TLClassifier(object):
 
         # it takes time tu run the clasifyer so it is best to just return the
         # last known classification. Homework for later: bilt a faster model
-        self.lock = Lock()
+
 
         #initializing tensorflow
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        PATH_TO_MODEL = dir_path + '/rfcn_resnet101_coco_2017_11_08.pb'
+
+        PATH_TO_MODEL = dir_path + '/graphs_22_faster_rcnn_bogdan_112900.pb'
+        
         self.detection_graph = tf.Graph()
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
@@ -74,17 +76,18 @@ class TLClassifier(object):
             color_val =  classes[0]
             score = scores[0]
             if color_val in self.red_values:
-                #print ("----> red   ", "Score = " , score, "<---", start_time, end_time)
+                print ("----> red   ", "Score = " , score, "<---", start_time, end_time)
                 return TrafficLight.RED
             elif color_val in self.green_values:
-                #print ("----> green ", "Score = " , score, "<---", start_time, end_time)
+                print ("----> green ", "Score = " , score, "<---", start_time, end_time)
                 return TrafficLight.GREEN
             elif color_val in self.yellow_values:
-                #print ("----> yellow", "Score = " , score, "<---", start_time, end_time)
+                print ("----> yellow", "Score = " , score, "<---", start_time, end_time)
                 return TrafficLight.YELLOW
             else:
+                print ("----> unknown", "Score = " , score, "<---", start_time, end_time)
                 return TrafficLight.UNKNOWN
-            
+
     # def get_classification(self, image):
     #     thread = threading.Thread(target=self.clasify_in_background, args=(image,))
     #     thread.daemon = True
